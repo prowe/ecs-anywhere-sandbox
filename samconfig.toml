@@ -1,0 +1,9 @@
+version=0.1
+[default.global.parameters]
+region = "us-east-2"
+
+[default.deploy.parameters]
+s3_bucket = "prowe-sai-sandbox-dev-deploy"
+s3_prefix = "prowe-ecs-anywhere-sandbox"
+capabilities = "CAPABILITY_IAM"
+fail_on_empty_changeset = "false"

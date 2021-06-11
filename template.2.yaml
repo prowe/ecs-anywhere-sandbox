@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Resources:
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - sts:AssumeRole
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/CloudWatchLogsFullAccess'
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties: 
+      RequiresCompatibilities:
+        - EXTERNAL
+      ContainerDefinitions:
+        - Name: "nginx"
+          Image: "public.ecr.aws/nginx/nginx:latest"
+          Memory: 256
+          Cpu: 256
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Ref AWS::Region
+              awslogs-group: !Ref LogGroup
+          PortMappings:
+            - ContainerPort: 80
+              HostPort: 8080
+              Protocol: "tcp"
+      ExecutionRoleArn: !GetAtt InstanceRole.Arn
+      NetworkMode: bridge
+      Family: "nginx"
+  
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: prowe-ecs-anywhere-1-Cluster-iplBxsSnTimW
+      DesiredCount: 1
+      TaskDefinition: !Ref TaskDefinition
+      LaunchType: EXTERNAL
+      DeploymentConfiguration:
+        MaximumPercent: 100
+        MinimumHealthyPercent: 0
+
